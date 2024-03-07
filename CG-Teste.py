@@ -47,25 +47,29 @@ while True:
     texto_rect.x += velocidade_x
     texto_rect.y += velocidade_y
 
-    if texto_rect.right >= largura or texto_rect.left <= 0:
-        velocidade_x = random.randint(-1, 1)
-        velocidade_y = random.randint(-1, 1)
-        texto = fonte.render("•", True, VERMELHO)
-
-    if texto_rect.bottom >= altura or texto_rect.top <= 0:
-        velocidade_x = random.randint(-1, 1)
-        velocidade_y = random.randint(-1, 1) 
-        texto = fonte.render("•", True, ROXO)
-
     if texto_rect.left <= 0:
-        velocidade_x = random.randint(-1, 1)
+        velocidade_x = random.randint(0, 1)
         velocidade_y = random.randint(-1, 1) 
-        texto = fonte.render("•", True, VERDE)
+        cor_texto = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        texto = fonte.render("•", True, cor_texto)
+
+    if texto_rect.right >= largura:
+        velocidade_x = random.randint(-1, 0)
+        velocidade_y = random.randint(-1, 1)
+        cor_texto = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        texto = fonte.render("•", True, cor_texto)
 
     if texto_rect.top <= 0:
         velocidade_x = random.randint(-1, 1)
+        velocidade_y = random.randint(0, 1) 
+        cor_texto = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        texto = fonte.render("•", True, cor_texto)
+
+    if texto_rect.bottom >= altura:
+        velocidade_x = random.randint(-1, 0)
         velocidade_y = random.randint(-1, 1) 
-        texto = fonte.render("•", True, AMARELO)
+        cor_texto = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        texto = fonte.render("•", True, cor_texto)
     
 
     clock.tick(120)    
