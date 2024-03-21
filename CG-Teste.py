@@ -69,7 +69,7 @@ while True:
         velocidade_x = random.randint(-1, 0)
         velocidade_y = random.randint(-1, 1) 
         cor_texto = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        texto = fonte.render("•", True, cor_texto)
+        texto = fonte.render("•", True, cor_texto) 
     
 
     clock.tick(120)    
