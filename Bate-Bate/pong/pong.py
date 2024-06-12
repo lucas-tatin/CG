@@ -1,15 +1,13 @@
 import pygame
 from pygame import mixer
 from MenuDificuldades import MenuDificuldade
+from raquete import Raquete
+from bola import Bola
 import random
 import sys
 import time
 
-last_score_time = 0
-
 def main():
-    global last_score_time  # Adicionando a declaração global
-
     pygame.init()
 
     PRETO = (0, 0, 0)
@@ -21,13 +19,14 @@ def main():
     screen = pygame.display.set_mode((largura, altura))
     pygame.display.set_caption("Pong")
 
-    raquete_largura = 10
     raquete_altura = 60
     tamanho_bola = 10
 
-    raquete_player_1_dy = 5
+    raquete_player_1 = Raquete(largura - 20, altura // 2 - raquete_altura // 2, 10, raquete_altura)
+    raquete_pc = Raquete(10, altura // 2 - raquete_altura // 2, 10, raquete_altura)
+    bola = Bola(largura // 2 - tamanho_bola // 2, altura // 2 - tamanho_bola // 2, tamanho_bola, 5, 5)
 
-    vencedor = ""  # Variável definida aqui para estar acessível em todo o escopo de main()
+    vencedor = ""  
     controle = True
     rodando = True
 
@@ -44,42 +43,13 @@ def main():
 
     clock = pygame.time.Clock()
 
-    # Ajustes de dificuldade
-    if dificuldade_escolhida == "Fácil":
-        raquete_pc_dy = 3
-        velocidade_bola_x = 3
-        velocidade_bola_y = 3
-    elif dificuldade_escolhida == "Médio":
-        raquete_pc_dy = 5
-        velocidade_bola_x = 5
-        velocidade_bola_y = 5
-    elif dificuldade_escolhida == "Difícil":
-        raquete_pc_dy = 7
-        velocidade_bola_x = 7
-        velocidade_bola_y = 7
+    last_score_time = 0
 
-    global pc_x, pc_y, player_1_x, player_1_y, bola_x, bola_y, score_pc, score_player_1
-
-    def posicao_inicial():
-        global pc_x, pc_y, player_1_x, player_1_y, bola_x, bola_y, score_pc, score_player_1, last_score_time, bola_cor
-
-        pc_x = 10
-        pc_y = altura // 2 - raquete_altura // 2
-
-        player_1_x = largura - 20
-        player_1_y = altura // 2 - raquete_altura // 2
-
-        bola_x = largura // 2 - tamanho_bola // 2
-        bola_y = altura // 2 - tamanho_bola // 2
-
-        score_player_1 = 0
-        score_pc = 0
-
-        last_score_time = time.time()
-        bola_cor = BRANCO
+    score_player_1 = 0
+    score_pc = 0
 
     def fim_jogo():
-        nonlocal vencedor, controle  # Declara a variável vencedor como nonlocal para acessá-la no escopo da função
+        nonlocal vencedor, controle
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -88,7 +58,9 @@ def main():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         controle = True
-                        posicao_inicial()
+                        bola.reset(largura, altura)
+                        score_player_1 = 0
+                        score_pc = 0
                         return
 
             screen.fill(PRETO)
@@ -97,16 +69,6 @@ def main():
             screen.blit(texto_fim, text_fim_rect)
 
             pygame.display.flip()
-
-    def mudar_cor_bola():
-        global bola_cor
-        bola_cor = (
-            random.randint(0, 255),
-            random.randint(0, 255),
-            random.randint(0, 255)
-        )
-
-    posicao_inicial()
 
     while rodando:
         if not controle:
@@ -117,83 +79,68 @@ def main():
                     rodando = False
 
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_UP] and player_1_y > 0:
-                player_1_y -= raquete_player_1_dy
-            if keys[pygame.K_DOWN] and player_1_y < altura - raquete_altura:
-                player_1_y += raquete_player_1_dy
+            if keys[pygame.K_UP] and raquete_player_1.y > 0:
+                raquete_player_1.move(-5)
+            if keys[pygame.K_DOWN] and raquete_player_1.y < altura - raquete_altura:
+                raquete_player_1.move(5)
 
-            screen.fill(PRETO)
+            # Movimento do PC
+            if bola.y < raquete_pc.y:
+                raquete_pc.move(-5)
+            elif bola.y > raquete_pc.y + raquete_altura:
+                raquete_pc.move(5)
 
-            bola_x += velocidade_bola_x
-            bola_y += velocidade_bola_y
+            # Atualiza a posição da bola
+            bola.update()
 
-            bola_rect = pygame.Rect(bola_x, bola_y, tamanho_bola, tamanho_bola)
-            raquete_pc_rect = pygame.Rect(pc_x, pc_y, raquete_largura, raquete_altura)
-            raquete_player_1_rect = pygame.Rect(player_1_x, player_1_y, raquete_largura, raquete_altura)
-
-            # Movimento aleatório e mudança de cor ao colidir
-            if bola_rect.colliderect(raquete_pc_rect) or bola_rect.colliderect(raquete_player_1_rect):
-                som.play()
-                velocidade_bola_x = -velocidade_bola_x
-                velocidade_bola_y = random.randint(-7, 7)
-                mudar_cor_bola()
-
-            if bola_y <= 0 or bola_y >= altura - tamanho_bola:
-                velocidade_bola_y = -velocidade_bola_y
-                mudar_cor_bola()
-
-            if bola_x <= 0:
-                bola_x = largura // 2 - tamanho_bola // 2
-                bola_y = altura // 2 - tamanho_bola // 2
-                velocidade_bola_x = -velocidade_bola_x
+            # Verifica colisões com as bordas da tela
+            if bola.y <= 0 or bola.y >= altura - tamanho_bola:
+                bola.velocidade_y = -bola.velocidade_y
+            if bola.x <= 0:
+                # Ponto para o jogador
                 score_player_1 += 1
-                last_score_time = time.time()
-                print(f"Score Player_1: {score_player_1}")
-                if score_player_1 == 3:
-                    print("Player_1 ganhou!")
-                    vencedor = "Player 1"
-                    controle = False
-
-            if bola_x >= largura - tamanho_bola:
-                bola_x = largura // 2 - tamanho_bola // 2
-                bola_y = altura // 2 - tamanho_bola // 2
-                velocidade_bola_x = -velocidade_bola_x
-                velocidade_bola_y = random.randint(-7, 7)  # Adicionado para garantir uma direção aleatória após o ponto
+                bola.reset(largura, altura)
+            if bola.x >= largura:
+                # Ponto para o PC
                 score_pc += 1
-                last_score_time = time.time()
-                print(f"Score PC: {score_pc}")
-                if score_pc == 3:
-                    print("PC ganhou!")
-                    vencedor = "PC"
-                    controle = False    
+                bola.reset(largura, altura)
 
-            # Aumento da velocidade da bola ao longo do tempo
-            if time.time() - last_score_time > 10:  # Aumenta a cada 10 segundos
-                velocidade_bola_x *= 1.1
-                velocidade_bola_y *= 1.1
-                last_score_time = time.time()
+            # Verifica se algum jogador venceu
+            if score_player_1 >= 5:
+                vencedor = "Jogador 1"
+                controle = False
+            elif score_pc >= 5:
+                vencedor = "PC"
+                controle = False
 
-            # Movimento da raquete do PC
-            if bola_y > pc_y + raquete_altura // 2:
-                pc_y += raquete_pc_dy
-            elif bola_y < pc_y + raquete_altura // 2:
-                pc_y -= raquete_pc_dy
+            # Verifica colisões com as raquetes
+            if raquete_player_1.colide(bola) or raquete_pc.colide(bola):
+                bola.velocidade_x = -bola.velocidade_x
+                bola.mudar_cor()
+                bola.aumentar_velocidade()
 
-            # Desenho dos elementos na tela
+            # Limpa a tela
             screen.fill(PRETO)
-            pygame.draw.rect(screen, BRANCO, raquete_pc_rect)
-            pygame.draw.rect(screen, BRANCO, raquete_player_1_rect)
-            pygame.draw.ellipse(screen, bola_cor, bola_rect)
 
-            placar_text = placar_font.render(f"{score_pc} x {score_player_1}", True, BRANCO)
-            screen.blit(placar_text, (largura // 2 - placar_text.get_width() // 2, 20))
+            # Desenha os objetos na tela
+            raquete_player_1.draw(screen, BRANCO)
+            raquete_pc.draw(screen, BRANCO)
+            bola.draw(screen)
 
+            # Desenha o placar
+            placar_text = placar_font.render(f"Jogador: {score_player_1}  PC: {score_pc}", True, BRANCO)
+            screen.blit(placar_text, (largura // 2 - placar_text.get_width() // 2, 10))
+
+            # Atualiza a tela
             pygame.display.flip()
 
+            # Controle de FPS
             clock.tick(60)
 
-    pygame.quit()
-    sys.exit()
+            # Aumenta a velocidade da bola a cada 10 segundos
+            if time.time() - last_score_time > 10:
+                bola.aumentar_velocidade()
+                last_score_time = time.time()
 
 if __name__ == "__main__":
     main()

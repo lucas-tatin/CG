@@ -1,35 +1,40 @@
 import pygame
+import sys
 
 class MenuDificuldade:
     @staticmethod
     def menu_dificuldade(screen, largura, altura, font_file):
+        pygame.font.init()
         font = pygame.font.Font(font_file, 36)
-        dificuldade = ""
-
-        while not dificuldade:
+        pequeno_font = pygame.font.Font(font_file, 24)
+        
+        dificuldades = ["1 - Fácil", "2 - Médio", "3 - Difícil"]
+        dificuldade = None
+        
+        while dificuldade is None:
             screen.fill((0, 0, 0))
-            texto = font.render("Selecione a dificuldade:", True, (255, 255, 255))
-            texto_facil = font.render("1 - Fácil", True, (255, 255, 255))
-            texto_medio = font.render("2 - Médio", True, (255, 255, 255))
-            texto_dificil = font.render("3 - Difícil", True, (255, 255, 255))
-
-            screen.blit(texto, (largura // 2 - texto.get_width() // 2, altura // 2 - 50))
-            screen.blit(texto_facil, (largura // 2 - texto_facil.get_width() // 2, altura // 2 + 20))
-            screen.blit(texto_medio, (largura // 2 - texto_medio.get_width() // 2, altura // 2 + 60))
-            screen.blit(texto_dificil, (largura // 2 - texto_dificil.get_width() // 2, altura // 2 + 100))
-
+            
+            titulo = font.render("Selecione o Nível", True, (255, 255, 255))
+            titulo_rect = titulo.get_rect(center=(largura // 2, altura // 4))
+            screen.blit(titulo, titulo_rect)
+            
+            for i, nivel in enumerate(dificuldades):
+                texto = pequeno_font.render(f"{nivel}", True, (255, 255, 255))
+                texto_rect = texto.get_rect(center=(largura // 2, altura // 2 + i * 50))
+                screen.blit(texto, texto_rect)
+                
             pygame.display.flip()
-
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-                    quit()
+                    sys.exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_1:
-                        dificuldade = "Fácil"
+                        dificuldade = 1
                     elif event.key == pygame.K_2:
-                        dificuldade = "Médio"
+                        dificuldade = 2
                     elif event.key == pygame.K_3:
-                        dificuldade = "Difícil"
-
+                        dificuldade = 3
+        
         return dificuldade
